@@ -168,7 +168,7 @@ class ElebeeGulp {
       'copy'
     ], () => {return this.taskWatch()});
 
-    this.gulp.task('reload', ['copy'], () => {this.reload()});
+    this.gulp.task('reload', ['copy'], () => {ElebeeGulp.reload()});
   };
 
   /**
@@ -176,7 +176,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanCssMain() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.css + '/main.*'
     ]);
   };
@@ -186,7 +186,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanCssAdmin() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.css + '/admin.*'
     ]);
   };
@@ -196,7 +196,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanJsMain() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.js + '/main.*'
     ]);
   };
@@ -206,7 +206,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanJsVendor() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.js + '/vendor*.js',
       this.paths.dist.js + '/vendor*.js.map'
     ]);
@@ -217,7 +217,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanSprites() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.sprites
     ]);
   };
@@ -227,7 +227,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanImages() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.img + '/**/*'
     ]);
   };
@@ -237,7 +237,8 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanCopy() {
-    return this.taskClean([
+    console.log('taskCleanCopy');
+    return ElebeeGulp.taskClean([
       this.paths.dist.root + '/**/*',
       '!' + this.paths.dist.css,
       '!' + this.paths.dist.css + '/**/*',
@@ -253,7 +254,7 @@ class ElebeeGulp {
    * @param files
    * @returns {*}
    */
-  taskClean(files) {
+  static taskClean(files) {
     return Del(files, {
       force: true
     });
@@ -275,7 +276,7 @@ class ElebeeGulp {
    */
   taskLintScssMain() {
 
-    let path = this.cloneObject(this.paths.src.scss.main);
+    let path = ElebeeGulp.cloneObject(this.paths.src.scss.main);
     path.push('!src/css/vendor/**/*.scss');
     path.push('!src/.sprites-cache/**/*.css');
 
@@ -411,7 +412,7 @@ class ElebeeGulp {
     files.forEach((element) => {
       if (element.match(/vendor[a-zA-z0-9_-]*\.js\.json/)) {
 
-        let src = this.getSrcFromJson('src/js/' + element);
+        let src = ElebeeGulp.getSrcFromJson('src/js/' + element);
         let stream = this.gulp.src(src)
           .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
           .pipe(Plugins.uglify()
@@ -498,17 +499,24 @@ class ElebeeGulp {
     watcher.push(this.gulp.watch(this.paths.src.copy, ['copy', 'reload']));
 
     watcher.forEach((e, i, a) => {
-      e.on('change', () => {
-        this.onChangeCallback
+      e.on('change', (event) => {
+        ElebeeGulp.onChangeCallback(event);
       });
     });
   };
 
-  reload() {
+  /**
+   *
+   */
+  static reload() {
     Plugins.livereload.reload('index.php');
   };
 
-  onChangeCallback(event) {
+  /**
+   *
+   * @param event
+   */
+  static onChangeCallback(event) {
     let now = new Date(),
       time = now.toTimeString().substr(0, 8);
     console.log('\n[' + Plugins.util.colors.blue(time) + '] ' + event.type + ':\n\t' + event.path + '\n');
@@ -528,7 +536,7 @@ class ElebeeGulp {
    * @param {string} cwd
    * @return {string[]}
    */
-  cwd(files, cwd) {
+  static cwd(files, cwd) {
     if (cwd) {
       let i, file;
       for (i = 0; i < files.length; i++) {
@@ -545,12 +553,12 @@ class ElebeeGulp {
    * @param jsonSrcFile
    * @returns {Array}
    */
-  getSrcFromJson(jsonSrcFile) {
+  static getSrcFromJson(jsonSrcFile) {
     let sources = Jsonfile.readFileSync(jsonSrcFile);
     let src = [];
 
     for (let i = 0; i < sources.length; ++i) {
-      src = src.concat(this.cwd(sources[i].files, sources[i].cwd));
+      src = src.concat(ElebeeGulp.cwd(sources[i].files, sources[i].cwd));
     }
 
     return src;
@@ -561,7 +569,7 @@ class ElebeeGulp {
    *
    * @param object
    */
-  cloneObject(object) {
+  static cloneObject(object) {
     return JSON.parse(JSON.stringify(object));
   };
 
