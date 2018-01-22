@@ -5,7 +5,6 @@
  */
 'use strict';
 
-const Gulp = require('gulp');
 const Fs = require('fs');
 const Jsonfile = require('jsonfile');
 const Merge = require('merge-stream');
@@ -238,7 +237,6 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanCopy() {
-    console.log('taskCleanCopy');
     return ElebeeGulp.taskClean([
       this.paths.dist.root + '/**/*',
       '!' + this.paths.dist.css,
