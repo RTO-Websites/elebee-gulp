@@ -6,6 +6,11 @@
 'use strict';
 
 const Gulp = require('gulp');
+const Fs = require('fs');
+const Jsonfile = require('jsonfile');
+const Merge = require('merge-stream');
+const Del = require('del');
+const Plugins = require('gulp-load-plugins')();
 
 /**
  * Abstract class representing the gulptfile.
@@ -25,16 +30,9 @@ class ElebeeGulp {
 
     this.gulp = _gulp;
 
-    this.fs = require('fs');
-    this.path = require('path');
-    this.jsonFile = require('jsonfile');
-    this.plugins = require('gulp-load-plugins')();
-    this.merge = require('merge-stream');
-    this.del = require('del');
+    this.pkg = Jsonfile.readFileSync('package.json');
 
-    this.pkg = this.jsonFile.readFileSync('package.json');
-
-    this.args = this.plugins.util.env;
+    this.args = Plugins.util.env;
 
     var src = 'src';
     var dist = '../themes/' + this.pkg.name;
@@ -256,7 +254,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskClean(files) {
-    return this.del(files, {
+    return Del(files, {
       force: true
     });
   };
@@ -293,7 +291,7 @@ class ElebeeGulp {
   taskLintScss(path) {
 
     return this.gulp.src(path)
-      .pipe(this.plugins.stylelint({
+      .pipe(Plugins.stylelint({
         failAfterError: false,
         reporters: [
           {
@@ -316,7 +314,7 @@ class ElebeeGulp {
     if(configFiles instanceof Array) {
       for(var i = 0; i < configFiles.length; ++i) {
         try {
-          var tmpConfig = this.jsonFile.readFileSync(configFiles[i]);
+          var tmpConfig = Jsonfile.readFileSync(configFiles[i]);
           for(var rule in tmpConfig) {
             config[rule] = tmpConfig[rule];
           }
@@ -326,7 +324,7 @@ class ElebeeGulp {
     }
     else {
       try {
-        config = this.jsonFile.readFileSync(this.pkg.coffeelint.extends);
+        config = Jsonfile.readFileSync(this.pkg.coffeelint.extends);
       }
       catch (error) {
         config = {};
@@ -334,8 +332,8 @@ class ElebeeGulp {
     }
 
     return this.gulp.src(this.paths.src.coffee.main)
-      .pipe(this.plugins.coffeelint(config))
-      .pipe(this.plugins.coffeelint.reporter('default'));
+      .pipe(Plugins.coffeelint(config))
+      .pipe(Plugins.coffeelint.reporter('default'));
     //.pipe(_plugins.coffeelint.reporter('coffeelint-stylish'));
   };
 
@@ -363,16 +361,16 @@ class ElebeeGulp {
    */
   taskCompileScss(src, outFileName) {
     return this.gulp.src(src)
-      .pipe(this.plugins.sassBulkImport())
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.init(this.sourcemapsConfig)))
-      .pipe(this.plugins.sass(this.sassConfig)
-        .on('error', this.plugins.sass.logError))
-      .pipe(this.plugins.autoprefixer(this.autoprefixerConfig))
-      .pipe(this.plugins.concat(outFileName))
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.write()))
+      .pipe(Plugins.sassBulkImport())
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
+      .pipe(Plugins.sass(this.sassConfig)
+        .on('error', Plugins.sass.logError))
+      .pipe(Plugins.autoprefixer(this.autoprefixerConfig))
+      .pipe(Plugins.concat(outFileName))
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
       .pipe(this.gulp.dest(this.paths.dist.css))
-      .pipe(this.plugins.notify(this.notifyConfig))
-      .pipe(this.plugins.livereload());
+      .pipe(Plugins.notify(this.notifyConfig))
+      .pipe(Plugins.livereload());
   };
 
   /**
@@ -383,22 +381,22 @@ class ElebeeGulp {
    */
   taskCompileCoffeeMain() {
     var coffeeStream = this.gulp.src(this.paths.src.coffee.main)
-      .pipe(this.plugins.plumber(this.errorSilent))
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.init(this.sourcemapsConfig)))
-      .pipe(this.plugins.coffee());
+      .pipe(Plugins.plumber(this.errorSilent))
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
+      .pipe(Plugins.coffee());
 
     var jsStream = this.gulp.src(this.paths.src.js.main)
-      .pipe(this.plugins.plumber(this.errorSilent))
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.init(this.sourcemapsConfig)))
-      .pipe(this.plugins.jshint());
+      .pipe(Plugins.plumber(this.errorSilent))
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
+      .pipe(Plugins.jshint());
 
-    return this.merge(coffeeStream, jsStream)
-      .pipe(this.plugins.uglify())
-      .pipe(this.plugins.concat('main.min.js'))
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.write()))
+    return Merge(coffeeStream, jsStream)
+      .pipe(Plugins.uglify())
+      .pipe(Plugins.concat('main.min.js'))
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
       .pipe(this.gulp.dest(this.paths.dist.js))
-      .pipe(this.plugins.notify(this.notifyConfig))
-      .pipe(this.plugins.livereload());
+      .pipe(Plugins.notify(this.notifyConfig))
+      .pipe(Plugins.livereload());
   };
 
   /**
@@ -406,7 +404,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskUglifyJsVendor() {
-    var files = this.fs.readdirSync('src/js');
+    var files = Fs.readdirSync('src/js');
 
     var output = null;
 
@@ -415,20 +413,20 @@ class ElebeeGulp {
 
         var src = this.getSrcFromJson('src/js/' + element);
         var stream = this.gulp.src(src)
-          .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.init(this.sourcemapsConfig)))
-          .pipe(this.plugins.uglify()
-            .on('error', this.plugins.util.log))
-          .pipe(this.plugins.concat(element.replace('.js.json', '.min.js')))
-          .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.write()))
+          .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
+          .pipe(Plugins.uglify()
+            .on('error', Plugins.util.log))
+          .pipe(Plugins.concat(element.replace('.js.json', '.min.js')))
+          .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
           .pipe(this.gulp.dest(this.paths.dist.js))
-          .pipe(this.plugins.notify(this.notifyConfig))
-          .pipe(this.plugins.livereload());
+          .pipe(Plugins.notify(this.notifyConfig))
+          .pipe(Plugins.livereload());
 
         if (output === null) {
           output = stream;
         }
         else {
-          output = this.merge(output, stream);
+          output = Merge(output, stream);
         }
       }
     });
@@ -454,10 +452,10 @@ class ElebeeGulp {
     }
 
     return this.gulp.src(this.paths.src.sprites)
-      .pipe(this.plugins.spritesmithMulti(spritesmithMultiOptions))
-      .on('error', this.plugins.util.log)
+      .pipe(Plugins.spritesmithMulti(spritesmithMultiOptions))
+      .on('error', Plugins.util.log)
       .pipe(this.gulp.dest(this.paths.dist.sprites))
-      /*.pipe(this.plugins.notify(notifyConfig))*/;
+      /*.pipe(Plugins.notify(notifyConfig))*/;
   };
 
   /**
@@ -468,10 +466,10 @@ class ElebeeGulp {
   taskImages() {
     return this.gulp.src(this.paths.src.images, {nodir: true})
     // Pass in options to the task
-      .pipe(this.plugins.imagemin({optimizationLevel: 5}))
+      .pipe(Plugins.imagemin({optimizationLevel: 5}))
       .pipe(this.gulp.dest(this.paths.dist.img))
-      .pipe(this.plugins.notify(this.notifyConfig))
-      .pipe(this.plugins.livereload());
+      .pipe(Plugins.notify(this.notifyConfig))
+      .pipe(Plugins.livereload());
   };
 
   /**
@@ -489,7 +487,7 @@ class ElebeeGulp {
   taskWatch() {
     var watcher = [];
 
-    this.plugins.livereload.listen();
+    Plugins.livereload.listen();
 
     watcher.push(this.gulp.watch(this.paths.src.scss.main, ['watch:compile:scss:main']));
     watcher.push(this.gulp.watch(this.paths.src.scss.admin, ['watch:compile:scss:admin']));
@@ -507,13 +505,13 @@ class ElebeeGulp {
   };
 
   reload() {
-    this.plugins.livereload.reload('index.php');
+    Plugins.livereload.reload('index.php');
   };
 
   onChangeCallback(event) {
     var now = new Date(),
       time = now.toTimeString().substr(0, 8);
-    console.log('\n[' + this.plugins.util.colors.blue(time) + '] ' + event.type + ':\n\t' + event.path + '\n');
+    console.log('\n[' + Plugins.util.colors.blue(time) + '] ' + event.type + ':\n\t' + event.path + '\n');
   };
 
   /**
@@ -548,7 +546,7 @@ class ElebeeGulp {
    * @returns {Array}
    */
   getSrcFromJson(jsonSrcFile) {
-    var sources = this.jsonFile.readFileSync(jsonSrcFile);
+    var sources = Jsonfile.readFileSync(jsonSrcFile);
     var src = [];
 
     for (var i = 0; i < sources.length; ++i) {
