@@ -161,6 +161,7 @@ class ElebeeGulp {
     this.gulp.task('watch:compile:scss:main', ['clean:css:main', 'lint:scss:main'], () => {return this.taskCompileScssMain()});
     this.gulp.task('watch:images', ['clean:images'], () => {return this.taskImages()});
     this.gulp.task('watch', [
+      'compile:scss:admin',
       'compile:scss:main',
       'compile:coffee:main',
       'uglify:js:vendor',
