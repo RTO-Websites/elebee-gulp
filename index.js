@@ -34,8 +34,8 @@ class ElebeeGulp {
 
     this.args = Plugins.util.env;
 
-    var src = 'src';
-    var dist = '../themes/' + this.pkg.name;
+    let src = 'src';
+    let dist = '../themes/' + this.pkg.name;
 
     this.paths = {
       src: {
@@ -124,7 +124,7 @@ class ElebeeGulp {
    */
   registerTaks() {
 
-    var defaultTaskDependencies = [
+    let defaultTaskDependencies = [
       'compile:scss:admin',
       'compile:scss:main',
       'compile:coffee:main',
@@ -275,7 +275,7 @@ class ElebeeGulp {
    */
   taskLintScssMain() {
 
-    var path = this.cloneObject(this.paths.src.scss.main);
+    let path = this.cloneObject(this.paths.src.scss.main);
     path.push('!src/css/vendor/**/*.scss');
     path.push('!src/.sprites-cache/**/*.css');
 
@@ -308,14 +308,14 @@ class ElebeeGulp {
    */
   taskLintCoffeeMain() {
 
-    var config = {},
+    let config = {},
       configFiles = this.pkg.coffeelint.extends;
 
     if(configFiles instanceof Array) {
-      for(var i = 0; i < configFiles.length; ++i) {
+      for(let i = 0; i < configFiles.length; ++i) {
         try {
-          var tmpConfig = Jsonfile.readFileSync(configFiles[i]);
-          for(var rule in tmpConfig) {
+          let tmpConfig = Jsonfile.readFileSync(configFiles[i]);
+          for(let rule in tmpConfig) {
             config[rule] = tmpConfig[rule];
           }
         }
@@ -380,12 +380,12 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCompileCoffeeMain() {
-    var coffeeStream = this.gulp.src(this.paths.src.coffee.main)
+    let coffeeStream = this.gulp.src(this.paths.src.coffee.main)
       .pipe(Plugins.plumber(this.errorSilent))
       .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
       .pipe(Plugins.coffee());
 
-    var jsStream = this.gulp.src(this.paths.src.js.main)
+    let jsStream = this.gulp.src(this.paths.src.js.main)
       .pipe(Plugins.plumber(this.errorSilent))
       .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
       .pipe(Plugins.jshint());
@@ -404,15 +404,15 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskUglifyJsVendor() {
-    var files = Fs.readdirSync('src/js');
+    let files = Fs.readdirSync('src/js');
 
-    var output = null;
+    let output = null;
 
     files.forEach((element) => {
       if (element.match(/vendor[a-zA-z0-9_-]*\.js\.json/)) {
 
-        var src = this.getSrcFromJson('src/js/' + element);
-        var stream = this.gulp.src(src)
+        let src = this.getSrcFromJson('src/js/' + element);
+        let stream = this.gulp.src(src)
           .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
           .pipe(Plugins.uglify()
             .on('error', Plugins.util.log))
@@ -440,7 +440,7 @@ class ElebeeGulp {
    */
   taskSprites() {
 
-    var spritesmithMultiOptions = {
+    let spritesmithMultiOptions = {
       spritesmith: (options) => {
         options.imgPath = '../img/' + options.imgName
       }
@@ -485,7 +485,7 @@ class ElebeeGulp {
    * Rerun the task when a file changes
    */
   taskWatch() {
-    var watcher = [];
+    let watcher = [];
 
     Plugins.livereload.listen();
 
@@ -509,7 +509,7 @@ class ElebeeGulp {
   };
 
   onChangeCallback(event) {
-    var now = new Date(),
+    let now = new Date(),
       time = now.toTimeString().substr(0, 8);
     console.log('\n[' + Plugins.util.colors.blue(time) + '] ' + event.type + ':\n\t' + event.path + '\n');
   };
@@ -530,7 +530,7 @@ class ElebeeGulp {
    */
   cwd(files, cwd) {
     if (cwd) {
-      var i, file;
+      let i, file;
       for (i = 0; i < files.length; i++) {
         file = files[i];
         file = cwd + file;
@@ -546,10 +546,10 @@ class ElebeeGulp {
    * @returns {Array}
    */
   getSrcFromJson(jsonSrcFile) {
-    var sources = Jsonfile.readFileSync(jsonSrcFile);
-    var src = [];
+    let sources = Jsonfile.readFileSync(jsonSrcFile);
+    let src = [];
 
-    for (var i = 0; i < sources.length; ++i) {
+    for (let i = 0; i < sources.length; ++i) {
       src = src.concat(this.cwd(sources[i].files, sources[i].cwd));
     }
 
