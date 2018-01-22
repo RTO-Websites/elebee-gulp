@@ -5,6 +5,8 @@
  */
 'use strict';
 
+const cwd = process.cwd();
+const pkg = require(cwd + '/package');
 const Fs = require('fs');
 const Jsonfile = require('jsonfile');
 const Merge = require('merge-stream');
@@ -29,12 +31,10 @@ class ElebeeGulp {
 
     this.gulp = _gulp;
 
-    this.pkg = Jsonfile.readFileSync('package.json');
-
     this.args = Plugins.util.env;
 
     let src = 'src';
-    let dist = '../themes/' + this.pkg.name;
+    let dist = '../themes/' + pkg.name;
 
     this.paths = {
       src: {
@@ -309,7 +309,7 @@ class ElebeeGulp {
   taskLintCoffeeMain() {
 
     let config = {},
-      configFiles = this.pkg.coffeelint.extends;
+      configFiles = pkg.coffeelint.extends;
 
     if(configFiles instanceof Array) {
       for(let i = 0; i < configFiles.length; ++i) {
@@ -324,7 +324,7 @@ class ElebeeGulp {
     }
     else {
       try {
-        config = Jsonfile.readFileSync(this.pkg.coffeelint.extends);
+        config = Jsonfile.readFileSync(pkg.coffeelint.extends);
       }
       catch (error) {
         config = {};
