@@ -1,9 +1,9 @@
 {
   "name": "elebee-gulp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Abstract class representing the Gulpfile. Provides methods to customize Gulp tasks.",
   "author": "RTO GmbH <info@rto.de>",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/RTO-Websites/Wordpress-Theme-Elebee.git"

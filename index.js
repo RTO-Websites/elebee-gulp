@@ -5,7 +5,13 @@
  */
 'use strict';
 
-const Gulp = require('gulp');
+const cwd = process.cwd();
+const pkg = require(cwd + '/package');
+const Fs = require('fs');
+const Jsonfile = require('jsonfile');
+const Merge = require('merge-stream');
+const Del = require('del');
+const Plugins = require('gulp-load-plugins')();
 
 /**
  * Abstract class representing the gulptfile.
@@ -25,19 +31,10 @@ class ElebeeGulp {
 
     this.gulp = _gulp;
 
-    this.fs = require('fs');
-    this.path = require('path');
-    this.jsonFile = require('jsonfile');
-    this.plugins = require('gulp-load-plugins')();
-    this.merge = require('merge-stream');
-    this.del = require('del');
+    this.args = Plugins.util.env;
 
-    this.pkg = this.jsonFile.readFileSync('package.json');
-
-    this.args = this.plugins.util.env;
-
-    var src = 'src';
-    var dist = '../themes/' + this.pkg.name;
+    let src = 'src';
+    let dist = '../themes/' + pkg.name;
 
     this.paths = {
       src: {
@@ -126,7 +123,7 @@ class ElebeeGulp {
    */
   registerTaks() {
 
-    var defaultTaskDependencies = [
+    let defaultTaskDependencies = [
       'compile:scss:admin',
       'compile:scss:main',
       'compile:coffee:main',
@@ -141,36 +138,37 @@ class ElebeeGulp {
 
     this.gulp.task('default', defaultTaskDependencies);
 
-    this.gulp.task('clean:sprites', () => {this.taskCleanSprites()});
-    this.gulp.task('clean:images', () => {this.taskCleanImages()});
-    this.gulp.task('clean:css:admin', () => {this.taskCleanCssAdmin()});
-    this.gulp.task('clean:css:main', () => {this.taskCleanCssMain()});
-    this.gulp.task('clean:js:main', () => {this.taskCleanJsMain()});
-    this.gulp.task('clean:js:vendor', () => {this.taskCleanJsVendor()});
-    this.gulp.task('clean:copy', () => {this.taskCleanCopy()});
-    this.gulp.task('lint:scss:admin', () => {this.taskLintScssAdmin()});
-    this.gulp.task('lint:scss:main', () => {this.taskLintScssMain()});
-    this.gulp.task('lint:coffee:main', () => {this.taskLintCoffeeMain()});
-    this.gulp.task('sprites', ['clean:sprites'], () => {this.taskSprites()});
-    this.gulp.task('images', ['clean:images', 'sprites'], () => {this.taskImages()});
-    this.gulp.task('compile:scss:admin', ['clean:css:admin', 'lint:scss:admin'], () => {this.taskCompileScssAdmin()});
-    this.gulp.task('compile:scss:main', ['clean:css:main', 'lint:scss:main', 'sprites'], () => {this.taskCompileScssMain()});
-    this.gulp.task('compile:coffee:main', ['clean:js:main', 'lint:coffee:main'], () => {this.taskCompileCoffeeMain()});
-    this.gulp.task('uglify:js:vendor', ['clean:js:vendor'], () => {this.taskUglifyJsVendor()});
-    this.gulp.task('copy', ['clean:copy'], () => {this.taskCopy()});
+    this.gulp.task('clean:sprites', () => {return this.taskCleanSprites()});
+    this.gulp.task('clean:images', () => {return this.taskCleanImages()});
+    this.gulp.task('clean:css:admin', () => {return this.taskCleanCssAdmin()});
+    this.gulp.task('clean:css:main', () => {return this.taskCleanCssMain()});
+    this.gulp.task('clean:js:main', () => {return this.taskCleanJsMain()});
+    this.gulp.task('clean:js:vendor', () => {return this.taskCleanJsVendor()});
+    this.gulp.task('clean:copy', () => {return this.taskCleanCopy()});
+    this.gulp.task('lint:scss:admin', () => {return this.taskLintScssAdmin()});
+    this.gulp.task('lint:scss:main', () => {return this.taskLintScssMain()});
+    this.gulp.task('lint:coffee:main', () => {return this.taskLintCoffeeMain()});
+    this.gulp.task('sprites', ['clean:sprites'], () => {return this.taskSprites()});
+    this.gulp.task('images', ['clean:images', 'sprites'], () => {return this.taskImages()});
+    this.gulp.task('compile:scss:admin', ['clean:css:admin', 'lint:scss:admin'], () => {return this.taskCompileScssAdmin()});
+    this.gulp.task('compile:scss:main', ['clean:css:main', 'lint:scss:main', 'sprites'], () => {return this.taskCompileScssMain()});
+    this.gulp.task('compile:coffee:main', ['clean:js:main', 'lint:coffee:main'], () => {return this.taskCompileCoffeeMain()});
+    this.gulp.task('uglify:js:vendor', ['clean:js:vendor'], () => {return this.taskUglifyJsVendor()});
+    this.gulp.task('copy', ['clean:copy'], () => {return this.taskCopy()});
 
-    this.gulp.task('watch:compile:scss:admin', ['clean:css:admin', 'lint:scss:admin'], () => {this.taskCompileScssAdmin()});
-    this.gulp.task('watch:compile:scss:main', ['clean:css:main', 'lint:scss:main'], () => {this.taskCompileScssMain()});
-    this.gulp.task('watch:images', ['clean:images'], () => {this.taskImages()});
+    this.gulp.task('watch:compile:scss:admin', ['clean:css:admin', 'lint:scss:admin'], () => {return this.taskCompileScssAdmin()});
+    this.gulp.task('watch:compile:scss:main', ['clean:css:main', 'lint:scss:main'], () => {return this.taskCompileScssMain()});
+    this.gulp.task('watch:images', ['clean:images'], () => {return this.taskImages()});
     this.gulp.task('watch', [
+      'compile:scss:admin',
       'compile:scss:main',
       'compile:coffee:main',
       'uglify:js:vendor',
       'images',
       'copy'
-    ], () => {this.taskWatch()});
+    ], () => {return this.taskWatch()});
 
-    this.gulp.task('reload', ['copy'], () => {this.reload()});
+    this.gulp.task('reload', ['copy'], () => {ElebeeGulp.reload()});
   };
 
   /**
@@ -178,7 +176,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanCssMain() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.css + '/main.*'
     ]);
   };
@@ -188,7 +186,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanCssAdmin() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.css + '/admin.*'
     ]);
   };
@@ -198,7 +196,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanJsMain() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.js + '/main.*'
     ]);
   };
@@ -208,7 +206,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanJsVendor() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.js + '/vendor*.js',
       this.paths.dist.js + '/vendor*.js.map'
     ]);
@@ -219,7 +217,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanSprites() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.sprites
     ]);
   };
@@ -229,7 +227,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanImages() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.img + '/**/*'
     ]);
   };
@@ -239,7 +237,7 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCleanCopy() {
-    return this.taskClean([
+    return ElebeeGulp.taskClean([
       this.paths.dist.root + '/**/*',
       '!' + this.paths.dist.css,
       '!' + this.paths.dist.css + '/**/*',
@@ -255,8 +253,8 @@ class ElebeeGulp {
    * @param files
    * @returns {*}
    */
-  taskClean(files) {
-    return this.del(files, {
+  static taskClean(files) {
+    return Del(files, {
       force: true
     });
   };
@@ -277,7 +275,7 @@ class ElebeeGulp {
    */
   taskLintScssMain() {
 
-    var path = this.cloneObject(this.paths.src.scss.main);
+    let path = ElebeeGulp.cloneObject(this.paths.src.scss.main);
     path.push('!src/css/vendor/**/*.scss');
     path.push('!src/.sprites-cache/**/*.css');
 
@@ -293,7 +291,7 @@ class ElebeeGulp {
   taskLintScss(path) {
 
     return this.gulp.src(path)
-      .pipe(this.plugins.stylelint({
+      .pipe(Plugins.stylelint({
         failAfterError: false,
         reporters: [
           {
@@ -310,14 +308,14 @@ class ElebeeGulp {
    */
   taskLintCoffeeMain() {
 
-    var config = {},
-      configFiles = this.pkg.coffeelint.extends;
+    let config = {},
+      configFiles = pkg.coffeelint.extends;
 
     if(configFiles instanceof Array) {
-      for(var i = 0; i < configFiles.length; ++i) {
+      for(let i = 0; i < configFiles.length; ++i) {
         try {
-          var tmpConfig = this.jsonFile.readFileSync(configFiles[i]);
-          for(var rule in tmpConfig) {
+          let tmpConfig = Jsonfile.readFileSync(configFiles[i]);
+          for(let rule in tmpConfig) {
             config[rule] = tmpConfig[rule];
           }
         }
@@ -326,7 +324,7 @@ class ElebeeGulp {
     }
     else {
       try {
-        config = this.jsonFile.readFileSync(this.pkg.coffeelint.extends);
+        config = Jsonfile.readFileSync(pkg.coffeelint.extends);
       }
       catch (error) {
         config = {};
@@ -334,8 +332,8 @@ class ElebeeGulp {
     }
 
     return this.gulp.src(this.paths.src.coffee.main)
-      .pipe(this.plugins.coffeelint(config))
-      .pipe(this.plugins.coffeelint.reporter('default'));
+      .pipe(Plugins.coffeelint(config))
+      .pipe(Plugins.coffeelint.reporter('default'));
     //.pipe(_plugins.coffeelint.reporter('coffeelint-stylish'));
   };
 
@@ -363,16 +361,16 @@ class ElebeeGulp {
    */
   taskCompileScss(src, outFileName) {
     return this.gulp.src(src)
-      .pipe(this.plugins.sassBulkImport())
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.init(this.sourcemapsConfig)))
-      .pipe(this.plugins.sass(this.sassConfig)
-        .on('error', this.plugins.sass.logError))
-      .pipe(this.plugins.autoprefixer(this.autoprefixerConfig))
-      .pipe(this.plugins.concat(outFileName))
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.write()))
+      .pipe(Plugins.sassBulkImport())
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
+      .pipe(Plugins.sass(this.sassConfig)
+        .on('error', Plugins.sass.logError))
+      .pipe(Plugins.autoprefixer(this.autoprefixerConfig))
+      .pipe(Plugins.concat(outFileName))
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
       .pipe(this.gulp.dest(this.paths.dist.css))
-      .pipe(this.plugins.notify(this.notifyConfig))
-      .pipe(this.plugins.livereload());
+      .pipe(Plugins.notify(this.notifyConfig))
+      .pipe(Plugins.livereload());
   };
 
   /**
@@ -382,23 +380,23 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskCompileCoffeeMain() {
-    var coffeeStream = this.gulp.src(this.paths.src.coffee.main)
-      .pipe(this.plugins.plumber(this.errorSilent))
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.init(this.sourcemapsConfig)))
-      .pipe(this.plugins.coffee());
+    let coffeeStream = this.gulp.src(this.paths.src.coffee.main)
+      .pipe(Plugins.plumber(this.errorSilent))
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
+      .pipe(Plugins.coffee());
 
-    var jsStream = this.gulp.src(this.paths.src.js.main)
-      .pipe(this.plugins.plumber(this.errorSilent))
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.init(this.sourcemapsConfig)))
-      .pipe(this.plugins.jshint());
+    let jsStream = this.gulp.src(this.paths.src.js.main)
+      .pipe(Plugins.plumber(this.errorSilent))
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
+      .pipe(Plugins.jshint());
 
-    return this.merge(coffeeStream, jsStream)
-      .pipe(this.plugins.uglify())
-      .pipe(this.plugins.concat('main.min.js'))
-      .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.write()))
+    return Merge(coffeeStream, jsStream)
+      .pipe(Plugins.uglify())
+      .pipe(Plugins.concat('main.min.js'))
+      .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
       .pipe(this.gulp.dest(this.paths.dist.js))
-      .pipe(this.plugins.notify(this.notifyConfig))
-      .pipe(this.plugins.livereload());
+      .pipe(Plugins.notify(this.notifyConfig))
+      .pipe(Plugins.livereload());
   };
 
   /**
@@ -406,29 +404,29 @@ class ElebeeGulp {
    * @returns {*}
    */
   taskUglifyJsVendor() {
-    var files = this.fs.readdirSync('src/js');
+    let files = Fs.readdirSync('src/js');
 
-    var output = null;
+    let output = null;
 
     files.forEach((element) => {
       if (element.match(/vendor[a-zA-z0-9_-]*\.js\.json/)) {
 
-        var src = this.getSrcFromJson('src/js/' + element);
-        var stream = this.gulp.src(src)
-          .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.init(this.sourcemapsConfig)))
-          .pipe(this.plugins.uglify()
-            .on('error', this.plugins.util.log))
-          .pipe(this.plugins.concat(element.replace('.js.json', '.min.js')))
-          .pipe(this.plugins.if(this.args.dev, this.plugins.sourcemaps.write()))
+        let src = ElebeeGulp.getSrcFromJson('src/js/' + element);
+        let stream = this.gulp.src(src)
+          .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
+          .pipe(Plugins.uglify()
+            .on('error', Plugins.util.log))
+          .pipe(Plugins.concat(element.replace('.js.json', '.min.js')))
+          .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
           .pipe(this.gulp.dest(this.paths.dist.js))
-          .pipe(this.plugins.notify(this.notifyConfig))
-          .pipe(this.plugins.livereload());
+          .pipe(Plugins.notify(this.notifyConfig))
+          .pipe(Plugins.livereload());
 
         if (output === null) {
           output = stream;
         }
         else {
-          output = this.merge(output, stream);
+          output = Merge(output, stream);
         }
       }
     });
@@ -442,7 +440,7 @@ class ElebeeGulp {
    */
   taskSprites() {
 
-    var spritesmithMultiOptions = {
+    let spritesmithMultiOptions = {
       spritesmith: (options) => {
         options.imgPath = '../img/' + options.imgName
       }
@@ -454,10 +452,10 @@ class ElebeeGulp {
     }
 
     return this.gulp.src(this.paths.src.sprites)
-      .pipe(this.plugins.spritesmithMulti(spritesmithMultiOptions))
-      .on('error', this.plugins.util.log)
+      .pipe(Plugins.spritesmithMulti(spritesmithMultiOptions))
+      .on('error', Plugins.util.log)
       .pipe(this.gulp.dest(this.paths.dist.sprites))
-      /*.pipe(this.plugins.notify(notifyConfig))*/;
+      /*.pipe(Plugins.notify(notifyConfig))*/;
   };
 
   /**
@@ -468,10 +466,10 @@ class ElebeeGulp {
   taskImages() {
     return this.gulp.src(this.paths.src.images, {nodir: true})
     // Pass in options to the task
-      .pipe(this.plugins.imagemin({optimizationLevel: 5}))
+      .pipe(Plugins.imagemin({optimizationLevel: 5}))
       .pipe(this.gulp.dest(this.paths.dist.img))
-      .pipe(this.plugins.notify(this.notifyConfig))
-      .pipe(this.plugins.livereload());
+      .pipe(Plugins.notify(this.notifyConfig))
+      .pipe(Plugins.livereload());
   };
 
   /**
@@ -487,9 +485,9 @@ class ElebeeGulp {
    * Rerun the task when a file changes
    */
   taskWatch() {
-    var watcher = [];
+    let watcher = [];
 
-    this.plugins.livereload.listen();
+    Plugins.livereload.listen();
 
     watcher.push(this.gulp.watch(this.paths.src.scss.main, ['watch:compile:scss:main']));
     watcher.push(this.gulp.watch(this.paths.src.scss.admin, ['watch:compile:scss:admin']));
@@ -500,20 +498,27 @@ class ElebeeGulp {
     watcher.push(this.gulp.watch(this.paths.src.copy, ['copy', 'reload']));
 
     watcher.forEach((e, i, a) => {
-      e.on('change', () => {
-        this.onChangeCallback
+      e.on('change', (event) => {
+        ElebeeGulp.onChangeCallback(event);
       });
     });
   };
 
-  reload() {
-    this.plugins.livereload.reload('index.php');
+  /**
+   *
+   */
+  static reload() {
+    Plugins.livereload.reload('index.php');
   };
 
-  onChangeCallback(event) {
-    var now = new Date(),
+  /**
+   *
+   * @param event
+   */
+  static onChangeCallback(event) {
+    let now = new Date(),
       time = now.toTimeString().substr(0, 8);
-    console.log('\n[' + this.plugins.util.colors.blue(time) + '] ' + event.type + ':\n\t' + event.path + '\n');
+    console.log('\n[' + Plugins.util.colors.blue(time) + '] ' + event.type + ':\n\t' + event.path + '\n');
   };
 
   /**
@@ -530,9 +535,9 @@ class ElebeeGulp {
    * @param {string} cwd
    * @return {string[]}
    */
-  cwd(files, cwd) {
+  static cwd(files, cwd) {
     if (cwd) {
-      var i, file;
+      let i, file;
       for (i = 0; i < files.length; i++) {
         file = files[i];
         file = cwd + file;
@@ -547,12 +552,12 @@ class ElebeeGulp {
    * @param jsonSrcFile
    * @returns {Array}
    */
-  getSrcFromJson(jsonSrcFile) {
-    var sources = this.jsonFile.readFileSync(jsonSrcFile);
-    var src = [];
+  static getSrcFromJson(jsonSrcFile) {
+    let sources = Jsonfile.readFileSync(jsonSrcFile);
+    let src = [];
 
-    for (var i = 0; i < sources.length; ++i) {
-      src = src.concat(this.cwd(sources[i].files, sources[i].cwd));
+    for (let i = 0; i < sources.length; ++i) {
+      src = src.concat(ElebeeGulp.cwd(sources[i].files, sources[i].cwd));
     }
 
     return src;
@@ -563,7 +568,7 @@ class ElebeeGulp {
    *
    * @param object
    */
-  cloneObject(object) {
+  static cloneObject(object) {
     return JSON.parse(JSON.stringify(object));
   };
 
