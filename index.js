@@ -369,7 +369,7 @@ class ElebeeGulp {
       .pipe(Plugins.concat(outFileName))
       .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
       .pipe(this.gulp.dest(this.paths.dist.css))
-      .pipe(Plugins.notify(this.notifyConfig))
+      // .pipe(Plugins.notify(this.notifyConfig))
       .pipe(Plugins.livereload());
   };
 
@@ -395,7 +395,7 @@ class ElebeeGulp {
       .pipe(Plugins.concat('main.min.js'))
       .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
       .pipe(this.gulp.dest(this.paths.dist.js))
-      .pipe(Plugins.notify(this.notifyConfig))
+      // .pipe(Plugins.notify(this.notifyConfig))
       .pipe(Plugins.livereload());
   };
 
@@ -419,7 +419,7 @@ class ElebeeGulp {
           .pipe(Plugins.concat(element.replace('.js.json', '.min.js')))
           .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
           .pipe(this.gulp.dest(this.paths.dist.js))
-          .pipe(Plugins.notify(this.notifyConfig))
+          // .pipe(Plugins.notify(this.notifyConfig))
           .pipe(Plugins.livereload());
 
         if (output === null) {
@@ -468,7 +468,7 @@ class ElebeeGulp {
     // Pass in options to the task
       .pipe(Plugins.imagemin({optimizationLevel: 5}))
       .pipe(this.gulp.dest(this.paths.dist.img))
-      .pipe(Plugins.notify(this.notifyConfig))
+      // .pipe(Plugins.notify(this.notifyConfig))
       .pipe(Plugins.livereload());
   };
 
