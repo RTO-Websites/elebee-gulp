@@ -5,12 +5,15 @@
  */
 'use strict';
 
+const Minimist = require('minimist');
 const cwd = process.cwd();
 const pkg = require(cwd + '/package');
 const Fs = require('fs');
 const Jsonfile = require('jsonfile');
 const Merge = require('merge-stream');
 const Del = require('del');
+const FancyLog = require('fancy-log');
+const Colors = require('ansi-colors');
 const Plugins = require('gulp-load-plugins')();
 
 /**
@@ -31,7 +34,7 @@ class ElebeeGulp {
 
     this.gulp = _gulp;
 
-    this.args = Plugins.util.env;
+    this.args = Minimist(process.argv.slice(2));
 
     let src = 'src';
     let dist = '../themes/' + pkg.name;
@@ -415,7 +418,7 @@ class ElebeeGulp {
         let stream = this.gulp.src(src)
           .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.init(this.sourcemapsConfig)))
           .pipe(Plugins.uglify()
-            .on('error', Plugins.util.log))
+            .on('error', FancyLog.error))
           .pipe(Plugins.concat(element.replace('.js.json', '.min.js')))
           .pipe(Plugins.if(this.args.dev, Plugins.sourcemaps.write()))
           .pipe(this.gulp.dest(this.paths.dist.js))
@@ -453,7 +456,7 @@ class ElebeeGulp {
 
     return this.gulp.src(this.paths.src.sprites)
       .pipe(Plugins.spritesmithMulti(spritesmithMultiOptions))
-      .on('error', Plugins.util.log)
+      .on('error', FancyLog.error)
       .pipe(this.gulp.dest(this.paths.dist.sprites))
       /*.pipe(Plugins.notify(notifyConfig))*/;
   };
@@ -518,7 +521,7 @@ class ElebeeGulp {
   static onChangeCallback(event) {
     let now = new Date(),
       time = now.toTimeString().substr(0, 8);
-    console.log('\n[' + Plugins.util.colors.blue(time) + '] ' + event.type + ':\n\t' + event.path + '\n');
+    console.log('\n[' + Colors.blue(time) + '] ' + event.type + ':\n\t' + event.path + '\n');
   };
 
   /**
