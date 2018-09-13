@@ -33,7 +33,7 @@
     "gulp-uglify": "^3.0.0",
     "gulp.spritesmith-multi": "^3.1.0",
     "jshint": "^2.9.5",
-    "jsonfile": "^4.0.0",
+    "jsonfile": "^5.0.0",
     "merge-stream": "^1.0.1",
     "minimist": "^1.2.0",
     "node-neat": "^1.7.2",
