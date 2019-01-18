@@ -53,7 +53,7 @@ class ElebeeGulp {
           main: [
             src + '/.sprites-cache/**/*.css',
             src + '/css/**/*.scss',
-            '!' + src + '/css/admin.scss',
+            '!' + src + '/css/{admin,preview}.scss',
             '!' + src + '/css/admin/**/*.scss',
             '!' + src + '/css/editor.scss',
             '!' + src + '/css/editor/**/*.scss'
@@ -65,6 +65,9 @@ class ElebeeGulp {
           editor: [
             src + '/css/editor.scss',
             src + '/css/editor/**/*.scss'
+          ],
+          preview: [
+            src + '/css/preview.scss'
           ]
         },
         coffee: {
@@ -136,6 +139,7 @@ class ElebeeGulp {
       'compile:scss:admin',
       'compile:scss:editor',
       'compile:scss:main',
+      'compile:scss:preview',
       'compile:coffee:main',
       'uglify:js:vendor',
       'images',
@@ -153,18 +157,21 @@ class ElebeeGulp {
     this.gulp.task('clean:css:admin', () => {return this.taskCleanCssAdmin()});
     this.gulp.task('clean:css:editor', () => {return this.taskCleanCssEditor()});
     this.gulp.task('clean:css:main', () => {return this.taskCleanCssMain()});
+    this.gulp.task('clean:css:preview', () => {return this.taskCleanCssPreview()});
     this.gulp.task('clean:js:main', () => {return this.taskCleanJsMain()});
     this.gulp.task('clean:js:vendor', () => {return this.taskCleanJsVendor()});
     this.gulp.task('clean:copy', () => {return this.taskCleanCopy()});
     this.gulp.task('lint:scss:admin', () => {return this.taskLintScssAdmin()});
     this.gulp.task('lint:scss:editor', () => {return this.taskLintScssEditor()});
     this.gulp.task('lint:scss:main', () => {return this.taskLintScssMain()});
+    this.gulp.task('lint:scss:preview', () => {return this.taskLintScssPreview()});
     this.gulp.task('lint:coffee:main', () => {return this.taskLintCoffeeMain()});
     this.gulp.task('sprites', ['clean:sprites'], () => {return this.taskSprites()});
     this.gulp.task('images', ['clean:images', 'sprites'], () => {return this.taskImages()});
     this.gulp.task('compile:scss:admin', ['clean:css:admin', 'lint:scss:admin'], () => {return this.taskCompileScssAdmin()});
     this.gulp.task('compile:scss:editor', ['clean:css:editor', 'lint:scss:editor'], () => {return this.taskCompileScssEditor()});
     this.gulp.task('compile:scss:main', ['clean:css:main', 'lint:scss:main', 'sprites'], () => {return this.taskCompileScssMain()});
+    this.gulp.task('compile:scss:preview', ['clean:css:preview', 'lint:scss:preview'], () => {return this.taskCompileScssPreview()});
     this.gulp.task('compile:coffee:main', ['clean:js:main', 'lint:coffee:main'], () => {return this.taskCompileCoffeeMain()});
     this.gulp.task('uglify:js:vendor', ['clean:js:vendor'], () => {return this.taskUglifyJsVendor()});
     this.gulp.task('copy', ['clean:copy'], () => {return this.taskCopy()});
@@ -172,11 +179,13 @@ class ElebeeGulp {
     this.gulp.task('watch:compile:scss:admin', ['clean:css:admin', 'lint:scss:admin'], () => {return this.taskCompileScssAdmin()});
     this.gulp.task('watch:compile:scss:editor', ['clean:css:editor', 'lint:scss:editor'], () => {return this.taskCompileScssEditor()});
     this.gulp.task('watch:compile:scss:main', ['clean:css:main', 'lint:scss:main'], () => {return this.taskCompileScssMain()});
+    this.gulp.task('watch:compile:scss:preview', ['clean:css:preview', 'lint:scss:preview'], () => {return this.taskCompileScssPreview()});
     this.gulp.task('watch:images', ['clean:images'], () => {return this.taskImages()});
     this.gulp.task('watch', [
       'compile:scss:admin',
       'compile:scss:editor',
       'compile:scss:main',
+      'compile:scss:preview',
       'compile:coffee:main',
       'uglify:js:vendor',
       'images',
@@ -213,6 +222,16 @@ class ElebeeGulp {
   taskCleanCssAdmin() {
     return ElebeeGulp.taskClean([
       this.paths.dist.css + '/admin.*'
+    ]);
+  };
+
+  /**
+   *
+   * @returns {*}
+   */
+  taskCleanCssPreview() {
+    return ElebeeGulp.taskClean([
+      this.paths.dist.css + '/preview.*'
     ]);
   };
 
@@ -320,6 +339,16 @@ class ElebeeGulp {
 
   /**
    *
+   * @returns {*}
+   */
+  taskLintScssPreview() {
+
+    return this.taskLintScss(this.paths.src.scss.preview);
+
+  }
+
+  /**
+   *
    * @param path
    * @returns {*}
    */
@@ -394,6 +423,14 @@ class ElebeeGulp {
    */
   taskCompileScssEditor() {
     return this.taskCompileScss(this.paths.src.scss.editor, 'editor.min.css');
+  };
+
+  /**
+   *
+   * @returns {*}
+   */
+  taskCompileScssPreview() {
+    return this.taskCompileScss(this.paths.src.scss.preview, 'preview.min.css');
   };
 
   /**
@@ -535,6 +572,7 @@ class ElebeeGulp {
     watcher.push(this.gulp.watch(this.paths.src.scss.main, ['watch:compile:scss:main']));
     watcher.push(this.gulp.watch(this.paths.src.scss.admin, ['watch:compile:scss:admin']));
     watcher.push(this.gulp.watch(this.paths.src.scss.editor, ['watch:compile:scss:editor']));
+    watcher.push(this.gulp.watch(this.paths.src.scss.preview, ['watch:compile:scss:preview']));
     watcher.push(this.gulp.watch(this.paths.src.coffee.main, ['compile:coffee:main']));
     watcher.push(this.gulp.watch(this.paths.src.js.main, ['compile:coffee:main']));
     watcher.push(this.gulp.watch('src/js/vendor*.js.json', ['uglify:js:vendor']));
